@@ -6,8 +6,15 @@ import (
 
 	entities "github.com/afornagieri/go_api_template/internal/domain/entities/item"
 	database "github.com/afornagieri/go_api_template/internal/infra/database"
-	"github.com/google/uuid"
 )
+
+type ItemRepositoryInterface interface {
+	GetItems() ([]*entities.Item, error)
+	GetItemByName() (*entities.Item, error)
+	CreateItem(item entities.Item) error
+	UpdateItem(name string, item entities.Item) error
+	DeleteItem(name string) error
+}
 
 type ItemRepository struct {
 	DB *database.SqlCli
@@ -34,12 +41,6 @@ func (repo *ItemRepository) GetItems() ([]*entities.Item, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		itemID, err := uuid.Parse(id)
-		if err != nil {
-			return nil, err
-		}
-		item.ID = itemID
 
 		items = append(items, &item)
 	}
