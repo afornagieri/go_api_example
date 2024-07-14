@@ -3,6 +3,9 @@ package repositories
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+
+	"github.com/google/uuid"
 
 	entities "github.com/afornagieri/go_api_template/internal/domain/entities/item"
 	database "github.com/afornagieri/go_api_template/internal/infra/database"
@@ -10,7 +13,7 @@ import (
 
 type ItemRepositoryInterface interface {
 	GetItems() ([]*entities.Item, error)
-	GetItemByName() (*entities.Item, error)
+	GetItemByName(name string) (*entities.Item, error)
 	CreateItem(item entities.Item) error
 	UpdateItem(name string, item entities.Item) error
 	DeleteItem(name string) error
@@ -29,7 +32,7 @@ func (repo *ItemRepository) GetItems() ([]*entities.Item, error) {
 
 	rows, err := repo.DB.Conn.Query("SELECT id, name, price, description FROM items")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch items: %v", err)
 	}
 	defer rows.Close()
 
@@ -39,14 +42,11 @@ func (repo *ItemRepository) GetItems() ([]*entities.Item, error) {
 
 		err := rows.Scan(&id, &item.Name, &item.Price, &item.Description)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan item row: %v", err)
 		}
 
+		item.ID, _ = uuid.Parse(id)
 		items = append(items, &item)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, err
 	}
 
 	return items, nil
@@ -59,68 +59,94 @@ func (repo *ItemRepository) GetItemByName(name string) (*entities.Item, error) {
 		Scan(&item.ID, &item.Name, &item.Price, &item.Description)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("item not found")
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("item '%s' not found: %v", name, err)
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to get item by name: %v", err)
 	}
 
 	return &item, nil
 }
 
 func (repo *ItemRepository) CreateItem(item entities.Item) error {
-	itemFound, err := repo.GetItemByName(item.Name)
-	if err != nil && err.Error() != "item not found" {
-		return err
+	tx, err := repo.DB.Conn.Begin()
+	if err != nil {
+		return fmt.Errorf("could not begin transaction: %v", err)
 	}
-	if itemFound != nil {
-		return errors.New("item already exists")
-	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
 
 	newItem, err := entities.NewItem(item.Name, item.Price, item.Description)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create new item: %v", err)
 	}
 
-	_, err = repo.DB.Conn.Exec("INSERT INTO items (id, name, price, description) VALUES (?, ?, ?, ?)", newItem.ID.String(), newItem.Name, newItem.Price, newItem.Description)
+	_, err = tx.Exec("INSERT INTO items (id, name, price, description) VALUES (?, ?, ?, ?)", newItem.ID.String(), newItem.Name, newItem.Price, newItem.Description)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to insert item: %v", err)
 	}
 
+	err = tx.Commit()
 	return nil
 }
 
 func (repo *ItemRepository) UpdateItem(name string, item entities.Item) error {
-	itemFound, err := repo.GetItemByName(name)
-	if err != nil && err.Error() != "item not found" {
-		return err
-	}
-	if itemFound == nil {
-		return errors.New("item does not exist")
-	}
-
-	_, err = repo.DB.Conn.Exec("UPDATE items SET name = ?, price = ?, description = ? WHERE name = ?", item.Name, item.Price, item.Description, name)
+	tx, err := repo.DB.Conn.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not begin transaction: %v", err)
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	_, err = repo.getItemByNameInTx(tx, name)
+	if err != nil {
+		return fmt.Errorf("failed to get item '%s': %v", name, err)
 	}
 
+	_, err = tx.Exec("UPDATE items SET name = ?, price = ?, description = ? WHERE name = ?", item.Name, item.Price, item.Description, name)
+	if err != nil {
+		return fmt.Errorf("failed to update item: %v", err)
+	}
+
+	err = tx.Commit()
 	return nil
 }
 
 func (repo *ItemRepository) DeleteItem(name string) error {
-	result, err := repo.DB.Conn.Exec("DELETE FROM items WHERE name = ?", &name)
+	tx, err := repo.DB.Conn.Begin()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not begin transaction: %v", err)
 	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
 
-	rowsAffected, err := result.RowsAffected()
+	_, err = tx.Exec("DELETE FROM items WHERE name = ?", name)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete item: %v", err)
 	}
 
-	if rowsAffected == 0 {
-		return errors.New("item does not exist")
-	}
-
+	err = tx.Commit()
 	return nil
+}
+
+func (repo *ItemRepository) getItemByNameInTx(tx *sql.Tx, name string) (*entities.Item, error) {
+	var item entities.Item
+
+	err := tx.QueryRow("SELECT id, name, price, description FROM items WHERE name = ?", name).
+		Scan(&item.ID, &item.Name, &item.Price, &item.Description)
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get item '%s' in transaction: %v", name, err)
+	}
+
+	return &item, nil
 }
