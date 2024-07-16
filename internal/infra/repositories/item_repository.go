@@ -11,23 +11,15 @@ import (
 	database "github.com/afornagieri/go_api_template/internal/infra/database"
 )
 
-type ItemRepositoryInterface interface {
-	GetItems() ([]*entities.Item, error)
-	GetItemByName(name string) (*entities.Item, error)
-	CreateItem(item entities.Item) error
-	UpdateItem(name string, item entities.Item) error
-	DeleteItem(name string) error
-}
-
-type ItemRepository struct {
+type ItemRepository_Impl struct {
 	DB *database.SqlCli
 }
 
-func NewItemRepository(db *database.SqlCli) *ItemRepository {
-	return &ItemRepository{DB: db}
+func NewItemRepository(db *database.SqlCli) *ItemRepository_Impl {
+	return &ItemRepository_Impl{DB: db}
 }
 
-func (repo *ItemRepository) GetItems() ([]*entities.Item, error) {
+func (repo *ItemRepository_Impl) GetItems() ([]*entities.Item, error) {
 	var items []*entities.Item
 
 	rows, err := repo.DB.Conn.Query("SELECT id, name, price, description FROM items")
@@ -52,7 +44,7 @@ func (repo *ItemRepository) GetItems() ([]*entities.Item, error) {
 	return items, nil
 }
 
-func (repo *ItemRepository) GetItemByName(name string) (*entities.Item, error) {
+func (repo *ItemRepository_Impl) GetItemByName(name string) (*entities.Item, error) {
 	var item entities.Item
 
 	err := repo.DB.Conn.QueryRow("SELECT id, name, price, description FROM items WHERE name = ?", name).
@@ -68,7 +60,7 @@ func (repo *ItemRepository) GetItemByName(name string) (*entities.Item, error) {
 	return &item, nil
 }
 
-func (repo *ItemRepository) CreateItem(item entities.Item) error {
+func (repo *ItemRepository_Impl) CreateItem(item *entities.Item) error {
 	tx, err := repo.DB.Conn.Begin()
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
@@ -93,7 +85,7 @@ func (repo *ItemRepository) CreateItem(item entities.Item) error {
 	return nil
 }
 
-func (repo *ItemRepository) UpdateItem(name string, item entities.Item) error {
+func (repo *ItemRepository_Impl) UpdateItem(name string, item *entities.Item) error {
 	tx, err := repo.DB.Conn.Begin()
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
@@ -118,7 +110,7 @@ func (repo *ItemRepository) UpdateItem(name string, item entities.Item) error {
 	return nil
 }
 
-func (repo *ItemRepository) DeleteItem(name string) error {
+func (repo *ItemRepository_Impl) DeleteItem(name string) error {
 	tx, err := repo.DB.Conn.Begin()
 	if err != nil {
 		return fmt.Errorf("could not begin transaction: %v", err)
@@ -138,7 +130,7 @@ func (repo *ItemRepository) DeleteItem(name string) error {
 	return nil
 }
 
-func (repo *ItemRepository) getItemByNameInTx(tx *sql.Tx, name string) (*entities.Item, error) {
+func (repo *ItemRepository_Impl) getItemByNameInTx(tx *sql.Tx, name string) (*entities.Item, error) {
 	var item entities.Item
 
 	err := tx.QueryRow("SELECT id, name, price, description FROM items WHERE name = ?", name).

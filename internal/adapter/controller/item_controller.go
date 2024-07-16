@@ -50,7 +50,7 @@ func (ctrl *ItemController) GetItemByName(w http.ResponseWriter, r *http.Request
 }
 
 func (ctrl *ItemController) CreateItem(w http.ResponseWriter, r *http.Request) {
-	var item entities.Item
+	var item *entities.Item
 	err := json.NewDecoder(r.Body).Decode(&item)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -66,7 +66,7 @@ func (ctrl *ItemController) CreateItem(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl *ItemController) UpdateItem(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
-	var item entities.Item
+	var item *entities.Item
 	err := json.NewDecoder(r.Body).Decode(&item)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

@@ -11,7 +11,7 @@ type SqlCli struct {
 }
 
 func NewSqlCli() (*SqlCli, error) {
-	conn, err := sql.Open("sqlite3", "./internal/infra/database/items.db")
+	conn, err := sql.Open("sqlite3", "./items.db")
 	ensureTableExists(conn)
 	if err != nil {
 		return nil, err

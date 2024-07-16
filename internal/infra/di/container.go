@@ -17,8 +17,8 @@ func NewContainer() *Container {
 		panic(err)
 	}
 
-	itemRepository := repositories.ItemRepository{DB: db}
-	itemUseCase := usecases.NewIemUseCase(itemRepository)
+	itemRepository := repositories.NewItemRepository(db)
+	itemUseCase := usecases.NewItemUseCase(itemRepository)
 	itemController := controller.NewItemController(*itemUseCase)
 
 	return &Container{ItemController: itemController}
