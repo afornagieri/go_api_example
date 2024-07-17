@@ -2,7 +2,7 @@ package di
 
 import (
 	"github.com/afornagieri/go_api_template/internal/adapter/controller"
-	usecases "github.com/afornagieri/go_api_template/internal/domain/usecases/item"
+	"github.com/afornagieri/go_api_template/internal/domain/usecases"
 	"github.com/afornagieri/go_api_template/internal/infra/database"
 	"github.com/afornagieri/go_api_template/internal/infra/repositories"
 )
@@ -19,7 +19,7 @@ func NewContainer() *Container {
 
 	itemRepository := repositories.NewItemRepository(db)
 	itemUseCase := usecases.NewItemUseCase(itemRepository)
-	itemController := controller.NewItemController(*itemUseCase)
+	itemController := controller.NewItemController(itemUseCase)
 
 	return &Container{ItemController: itemController}
 }
