@@ -120,7 +120,7 @@ func TestItemRepository_CreateItem(t *testing.T) {
 	repo := repositories.NewItemRepository(sqlCli)
 
 	t.Run("CreateItem should create item successfully", func(t *testing.T) {
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "NewItem",
 			Price:       200.0,
 			Description: "Description for NewItem",
@@ -138,7 +138,7 @@ func TestItemRepository_CreateItem(t *testing.T) {
 	})
 
 	t.Run("CreateItem should handle database begin transaction error", func(t *testing.T) {
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "item",
 			Price:       200.0,
 			Description: "Description for item",
@@ -153,7 +153,7 @@ func TestItemRepository_CreateItem(t *testing.T) {
 	})
 
 	t.Run("CreateItem should handle missing item name", func(t *testing.T) {
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "",
 			Price:       200.0,
 			Description: "Description for NewItem",
@@ -166,7 +166,7 @@ func TestItemRepository_CreateItem(t *testing.T) {
 	})
 
 	t.Run("CreateItem should handle missing item price is invalid", func(t *testing.T) {
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "item",
 			Price:       -1,
 			Description: "Description for NewItem",
@@ -179,7 +179,7 @@ func TestItemRepository_CreateItem(t *testing.T) {
 	})
 
 	t.Run("CreateItem should handle missing item description", func(t *testing.T) {
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "item",
 			Price:       200.0,
 			Description: "",
@@ -192,7 +192,7 @@ func TestItemRepository_CreateItem(t *testing.T) {
 	})
 
 	t.Run("CreateItem should handle failed to insert item error", func(t *testing.T) {
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "NewItem",
 			Price:       200.0,
 			Description: "Description for NewItem",
@@ -220,7 +220,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 
 	t.Run("UpdateItem should update an existing item successfully", func(t *testing.T) {
 		existingItemName := "ExistingItem"
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "UpdatedItem",
 			Price:       300.0,
 			Description: "Updated Description",
@@ -242,7 +242,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 	})
 
 	t.Run("UpdateItem should handle database begin transaction error", func(t *testing.T) {
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "item",
 			Price:       200.0,
 			Description: "Description for item",
@@ -258,7 +258,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 
 	t.Run("UpdateItem should handle item not found", func(t *testing.T) {
 		nonExistingItemName := "NonExistingItem"
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "UpdatedItem",
 			Price:       300.0,
 			Description: "Updated Description",
@@ -277,7 +277,7 @@ func TestItemRepository_UpdateItem(t *testing.T) {
 
 	t.Run("UpdateItem should handle database error on update", func(t *testing.T) {
 		itemName := "ExistingItem"
-		item := entities.Item{
+		item := &entities.Item{
 			Name:        "UpdatedItem",
 			Price:       300.0,
 			Description: "Updated Description",
