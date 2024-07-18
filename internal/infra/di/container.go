@@ -1,7 +1,7 @@
 package di
 
 import (
-	"github.com/afornagieri/go_api_template/internal/adapter/controller"
+	controller "github.com/afornagieri/go_api_template/internal/adapter/controllers"
 	"github.com/afornagieri/go_api_template/internal/domain/usecases"
 	"github.com/afornagieri/go_api_template/internal/infra/database"
 	"github.com/afornagieri/go_api_template/internal/infra/repositories"

@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/afornagieri/go_api_template/internal/adapter/controller"
+	controller "github.com/afornagieri/go_api_template/internal/adapter/controllers"
 	"github.com/afornagieri/go_api_template/internal/adapter/middlewares"
 	"github.com/go-chi/chi/v5"
 )
