@@ -54,3 +54,19 @@ func TestGetItemsController(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, items, 2)
 }
+
+func TestGetItemsController_ShouldReturnError(t *testing.T) {
+	ctrl, mockRepo := setupController()
+
+	mockRepo.SetError("GetItems", true)
+
+	req, _ := http.NewRequest("GET", "/items", nil)
+	response := executeRequest(req, ctrl)
+
+	assert.Equal(t, http.StatusInternalServerError, response.Code)
+
+	var errResponse map[string]string
+	err := json.NewDecoder(response.Body).Decode(&errResponse)
+	assert.NoError(t, err)
+	assert.Equal(t, "internal server error", errResponse["error"])
+}
